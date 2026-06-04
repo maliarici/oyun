@@ -8,8 +8,6 @@
     :root {
       --cell-size: 50px;
       --gap-size: 4px;
-      --cols: 8;
-      --rows: 8;
     }
 
     * {
@@ -29,18 +27,31 @@
     }
 
     h1 {
-      margin: 8px 0 4px;
-      font-size: 30px;
+      margin: 6px 0 2px;
+      font-size: 28px;
+      line-height: 1.05;
+    }
+
+    .info {
+      width: 100%;
+      margin: 0 auto 3px;
+      padding: 0 8px;
+      color: #d8dcea;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+      font-size: clamp(8px, 1.45vw, 14px);
       line-height: 1.1;
     }
 
     .bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px;
       justify-content: center;
       align-items: center;
-      margin: 5px auto;
+      margin: 4px auto;
       padding: 0 8px;
     }
 
@@ -48,28 +59,28 @@
       background: #252b38;
       border: 1px solid #3a4254;
       border-radius: 9px;
-      padding: 6px 10px;
-      min-width: 82px;
+      padding: 5px 9px;
+      min-width: 78px;
     }
 
     .box small {
       display: block;
       color: #aeb7cc;
-      margin-bottom: 2px;
-      font-size: 11px;
+      margin-bottom: 1px;
+      font-size: 10px;
     }
 
     .box strong {
-      font-size: 17px;
+      font-size: 16px;
     }
 
     select,
     button {
-      padding: 8px 10px;
+      padding: 7px 9px;
       border: none;
       border-radius: 8px;
       color: white;
-      font-size: 14px;
+      font-size: 13px;
       cursor: pointer;
     }
 
@@ -97,7 +108,7 @@
       justify-content: center;
       align-items: center;
       overflow: hidden;
-      padding: 4px 8px;
+      padding: 3px 8px;
     }
 
     #board {
@@ -198,20 +209,20 @@
     }
 
     #message {
-      min-height: 20px;
-      font-size: 15px;
+      min-height: 18px;
+      font-size: 14px;
       font-weight: bold;
-      margin: 0 0 3px;
-      line-height: 1.2;
+      margin: 0 0 2px;
+      line-height: 1.15;
     }
 
     .rules {
       width: 100%;
-      padding: 0 8px 7px;
+      padding: 0 8px 6px;
       color: #c7cfdf;
       text-align: center;
       line-height: 1;
-      font-size: clamp(8px, 1.4vw, 14px);
+      font-size: clamp(8px, 1.3vw, 13px);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: clip;
@@ -223,23 +234,23 @@
 
     @media (max-height: 720px) {
       h1 {
-        font-size: 25px;
-        margin-top: 5px;
+        font-size: 24px;
+        margin-top: 4px;
       }
 
       .box {
-        padding: 4px 8px;
+        padding: 4px 7px;
       }
 
       select,
       button {
         padding: 6px 8px;
-        font-size: 13px;
+        font-size: 12px;
       }
 
       #message {
-        font-size: 13px;
-        min-height: 17px;
+        font-size: 12px;
+        min-height: 15px;
       }
     }
 
@@ -258,7 +269,7 @@
       }
 
       .box {
-        min-width: 72px;
+        min-width: 70px;
       }
     }
 
@@ -269,23 +280,27 @@
       }
 
       h1 {
-        font-size: 23px;
+        font-size: 22px;
+      }
+
+      .info {
+        font-size: 6.5px;
       }
 
       .bar {
         gap: 4px;
-        margin: 3px auto;
+        margin: 2px auto;
       }
 
       select,
       button {
-        padding: 6px 7px;
-        font-size: 12px;
+        padding: 5px 6px;
+        font-size: 11px;
       }
 
       .box {
-        min-width: 64px;
-        padding: 4px 6px;
+        min-width: 62px;
+        padding: 3px 5px;
       }
 
       .box strong {
@@ -301,13 +316,17 @@
       }
 
       .rules {
-        font-size: 6.5px;
+        font-size: 6px;
       }
     }
   </style>
 </head>
 <body>
   <h1>Kakuro</h1>
+
+  <div class="info">
+    Beyaz kutulara 1-9 arası sayı yaz. Sarı sayı sağdaki toplamı, mavi sayı aşağıdaki toplamı gösterir.
+  </div>
 
   <div class="bar">
     <select id="level">
@@ -346,7 +365,7 @@
   <div id="message"></div>
 
   <div class="rules">
-    <b>Kural:</b> Her bağlı yatay ve dikey karelerin toplamı, verilen sayıya eşit olmalı. Aynı satır ve sütun içinde sayılar tekrar etmemeli.
+    <b>Kural:</b> Satır ve sütundaki karelerin toplamı, verilen sayıya eşit olmalı. Aynı sayıya ait satır ve sütun içinde sayılar tekrar etmemeli.
   </div>
 
   <script>
@@ -554,7 +573,7 @@
 
         var byWidth = Math.floor((availableWidth - gap * (cols - 1)) / cols);
         var byHeight = Math.floor((availableHeight - gap * (rows - 1)) / rows);
-        var size = Math.max(30, Math.min(52, byWidth, byHeight));
+        var size = Math.max(28, Math.min(52, byWidth, byHeight));
 
         document.documentElement.style.setProperty("--cell-size", size + "px");
         document.documentElement.style.setProperty("--gap-size", gap + "px");
