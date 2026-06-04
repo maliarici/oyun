@@ -1,260 +1,627 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kakuro Oyunu</title>
   <style>
+    :root {
+      --cell-size: 58px;
+      --gap-size: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      background: #222;
+      min-height: 100vh;
+      background: #171b24;
       color: white;
       font-family: Arial, sans-serif;
       text-align: center;
-      user-select: none;
     }
 
-    canvas {
-      background: #111;
-      border: 3px solid white;
-      margin-top: 10px;
-      max-width: 95vw;
+    h1 {
+      margin: 18px 0 6px;
     }
 
-    .controls {
-      margin-top: 15px;
+    .info {
+      max-width: 760px;
+      margin: 0 auto 12px;
+      padding: 0 14px;
+      color: #d8dcea;
+      line-height: 1.45;
+    }
+
+    .bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin: 12px auto;
+      padding: 0 10px;
+    }
+
+    .box {
+      background: #252b38;
+      border: 1px solid #3a4254;
+      border-radius: 10px;
+      padding: 9px 12px;
+      min-width: 96px;
+    }
+
+    .box small {
+      display: block;
+      color: #aeb7cc;
+      margin-bottom: 3px;
+    }
+
+    .box strong {
+      font-size: 20px;
+    }
+
+    select,
+    button {
+      padding: 10px 13px;
+      border: none;
+      border-radius: 9px;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    select {
+      background: #30384a;
+      border: 1px solid #4c566d;
     }
 
     button {
-      width: 70px;
-      height: 50px;
-      margin: 4px;
-      font-size: 22px;
-      border: none;
-      border-radius: 8px;
-      background: #444;
-      color: white;
+      background: #0b76ef;
     }
 
-    button:active {
-      background: #777;
+    button.gray {
+      background: #4a5367;
+    }
+
+    button.red {
+      background: #bd3140;
+    }
+
+    .board-area {
+      overflow-x: auto;
+      padding: 14px 10px 22px;
+    }
+
+    #board {
+      display: inline-grid;
+      gap: var(--gap-size);
+      background: transparent;
+      padding: 4px;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      position: relative;
+    }
+
+    .spacer {
+      background: transparent;
+      box-shadow: none;
+      pointer-events: none;
+    }
+
+    .white,
+    .clue {
+      border-radius: 12px;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+    }
+
+    .white {
+      background: #f3f5fa;
+      overflow: hidden;
+    }
+
+    .clue {
+      background: linear-gradient(135deg, #0c1018, #232c3b);
+      overflow: hidden;
+    }
+
+    .diag-line {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .triangle-label {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      font-size: 13px;
+      font-weight: bold;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+      line-height: 1;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .triangle-label.right {
+      left: 67%;
+      top: 33%;
+      color: #ffd166;
+    }
+
+    .triangle-label.down {
+      left: 33%;
+      top: 67%;
+      color: #7cc7ff;
+    }
+
+    input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #121722;
+      text-align: center;
+      font-size: 27px;
+      font-weight: bold;
+    }
+
+    .white.active {
+      outline: 4px solid #7aa7ff;
+      outline-offset: 0;
+    }
+
+    .white.correct {
+      background: #c9f7ce;
+    }
+
+    .white.wrong {
+      background: #ffc4c4;
+    }
+
+    .white.hint {
+      background: #d8ecff;
+    }
+
+    #message {
+      min-height: 28px;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 14px;
+    }
+
+    .rules {
+      max-width: 760px;
+      margin: 0 auto 26px;
+      padding: 0 14px;
+      color: #c7cfdf;
+      text-align: left;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    @media (max-width: 520px) {
+      :root {
+        --cell-size: 46px;
+        --gap-size: 4px;
+      }
+
+      input {
+        font-size: 22px;
+      }
+
+      .triangle-label {
+        font-size: 11px;
+      }
     }
   </style>
 </head>
 <body>
-  <p>Ok tuşlarıyla veya alttaki butonlarla hareket et.</p>
+  <h1>Kakuro Oyunu</h1>
 
-  <h2>
-    Skor: <span id="score">0</span> |
-    Süre: <span id="time">60</span>
-  </h2>
+  <p class="info">
+    Beyaz kutulara 1-9 arası sayı yaz. Sarı sayı sağdaki toplamı, mavi sayı aşağıdaki toplamı gösterir.
+  </p>
 
-  <canvas id="game" width="500" height="400"></canvas>
+  <div class="bar">
+    <select id="level">
+      <option value="easy">Kolay</option>
+      <option value="medium" selected>Orta</option>
+      <option value="hard">Zor</option>
+    </select>
 
-  <div class="controls">
-    <div>
-      <button id="up">⬆️</button>
+    <div class="box">
+      <small>Süre</small>
+      <strong id="time">00:00</strong>
     </div>
-    <div>
-      <button id="left">⬅️</button>
-      <button id="down">⬇️</button>
-      <button id="right">➡️</button>
+
+    <div class="box">
+      <small>Hata</small>
+      <strong id="mistakes">0</strong>
+    </div>
+
+    <div class="box">
+      <small>İpucu</small>
+      <strong id="hints">3</strong>
     </div>
   </div>
 
+  <div class="bar">
+    <button id="checkBtn">Kontrol Et</button>
+    <button id="hintBtn" class="gray">İpucu</button>
+    <button id="newBtn" class="gray">Yeni Oyun</button>
+    <button id="solutionBtn" class="red">Çözümü Göster</button>
+  </div>
+
+  <div class="board-area">
+    <div id="board"></div>
+  </div>
+
+  <div id="message"></div>
+
+  <div class="rules">
+    <b>Kural:</b> Her bağlı yatay veya dikey beyaz grubun toplamı ipucuna eşit olmalı.
+    Aynı grup içinde aynı sayı tekrar etmez.
+  </div>
+
   <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+    document.addEventListener("DOMContentLoaded", function () {
+      var puzzles = {
+        easy: [
+          "######",
+          "##498#",
+          "#7952#",
+          "#3829#",
+          "#861##",
+          "######"
+        ],
+        medium: [
+          "########",
+          "##498###",
+          "#7952###",
+          "#28#431#",
+          "###1758#",
+          "#496183#",
+          "#7623###",
+          "########"
+        ],
+        hard: [
+          "##########",
+          "##4983####",
+          "#87592####",
+          "#72##8514#",
+          "#63#41235#",
+          "###8249###",
+          "#7418#34##",
+          "#52479136#",
+          "####61873#",
+          "##########"
+        ]
+      };
 
-    const scoreText = document.getElementById("score");
-    const timeText = document.getElementById("time");
+      var board = document.getElementById("board");
+      var levelSelect = document.getElementById("level");
+      var timeEl = document.getElementById("time");
+      var mistakesEl = document.getElementById("mistakes");
+      var hintsEl = document.getElementById("hints");
+      var messageEl = document.getElementById("message");
 
-    const player = {
-      x: 50,
-      y: 50,
-      size: 30,
-      speed: 5
-    };
+      var solution = [];
+      var seconds = 0;
+      var timer = null;
+      var mistakes = 0;
+      var hints = 3;
+      var finished = false;
 
-    const star = {
-      x: 200,
-      y: 150,
-      size: 20
-    };
+      document.getElementById("checkBtn").addEventListener("click", checkGame);
+      document.getElementById("hintBtn").addEventListener("click", giveHint);
+      document.getElementById("newBtn").addEventListener("click", newGame);
+      document.getElementById("solutionBtn").addEventListener("click", showSolution);
+      levelSelect.addEventListener("change", newGame);
 
-    const enemy = {
-      x: 350,
-      y: 250,
-      size: 35,
-      speedX: 3,
-      speedY: 2
-    };
-
-    let score = 0;
-    let timeLeft = 60;
-    let gameOver = false;
-
-    const keys = {};
-
-    document.addEventListener("keydown", e => {
-      keys[e.key] = true;
-    });
-
-    document.addEventListener("keyup", e => {
-      keys[e.key] = false;
-    });
-
-    function addTouchControl(buttonId, keyName) {
-      const button = document.getElementById(buttonId);
-
-      button.addEventListener("touchstart", e => {
-        e.preventDefault();
-        keys[keyName] = true;
-      });
-
-      button.addEventListener("touchend", e => {
-        e.preventDefault();
-        keys[keyName] = false;
-      });
-
-      button.addEventListener("mousedown", () => {
-        keys[keyName] = true;
-      });
-
-      button.addEventListener("mouseup", () => {
-        keys[keyName] = false;
-      });
-
-      button.addEventListener("mouseleave", () => {
-        keys[keyName] = false;
-      });
-    }
-
-    addTouchControl("up", "ArrowUp");
-    addTouchControl("down", "ArrowDown");
-    addTouchControl("left", "ArrowLeft");
-    addTouchControl("right", "ArrowRight");
-
-    function movePlayer() {
-      if (keys["ArrowUp"]) player.y -= player.speed;
-      if (keys["ArrowDown"]) player.y += player.speed;
-      if (keys["ArrowLeft"]) player.x -= player.speed;
-      if (keys["ArrowRight"]) player.x += player.speed;
-
-      player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
-      player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
-    }
-
-    function moveEnemy() {
-      enemy.x += enemy.speedX;
-      enemy.y += enemy.speedY;
-
-      if (enemy.x <= 0 || enemy.x + enemy.size >= canvas.width) {
-        enemy.speedX *= -1;
+      function formatTime(value) {
+        var m = Math.floor(value / 60);
+        var s = value % 60;
+        return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
       }
 
-      if (enemy.y <= 0 || enemy.y + enemy.size >= canvas.height) {
-        enemy.speedY *= -1;
+      function isWhite(r, c) {
+        return solution[r] && solution[r][c] && solution[r][c] !== "#";
       }
-    }
 
-    function isColliding(a, b) {
-      return (
-        a.x < b.x + b.size &&
-        a.x + a.size > b.x &&
-        a.y < b.y + b.size &&
-        a.y + a.size > b.y
-      );
-    }
-
-    function checkStarCollision() {
-      if (isColliding(player, star)) {
-        score++;
-        scoreText.textContent = score;
-
-        star.x = Math.random() * (canvas.width - star.size);
-        star.y = Math.random() * (canvas.height - star.size);
+      function valueAt(r, c) {
+        return Number(solution[r][c]);
       }
-    }
 
-    function checkEnemyCollision() {
-      if (isColliding(player, enemy)) {
-        gameOver = true;
-        drawGameOver("Düşmana yakalandın!");
+      function runTotal(r, c, dr, dc) {
+        var total = 0;
+        var count = 0;
+        var nr = r + dr;
+        var nc = c + dc;
+
+        while (isWhite(nr, nc)) {
+          total += valueAt(nr, nc);
+          count++;
+          nr += dr;
+          nc += dc;
+        }
+
+        return count > 0 ? total : "";
       }
-    }
 
-    function drawPlayer() {
-      ctx.fillStyle = "dodgerblue";
-      ctx.fillRect(player.x, player.y, player.size, player.size);
-    }
+      function makeCell(r, c) {
+        var div = document.createElement("div");
+        div.className = "cell";
 
-    function drawStar() {
-      ctx.fillStyle = "gold";
-      ctx.beginPath();
-      ctx.arc(
-        star.x + star.size / 2,
-        star.y + star.size / 2,
-        star.size / 2,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-    }
+        if (isWhite(r, c)) {
+          div.className += " white";
+          div.setAttribute("data-r", r);
+          div.setAttribute("data-c", c);
 
-    function drawEnemy() {
-      ctx.fillStyle = "crimson";
-      ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
-    }
+          var input = document.createElement("input");
+          input.maxLength = 1;
+          input.inputMode = "numeric";
+          input.setAttribute("data-r", r);
+          input.setAttribute("data-c", c);
 
-    function drawGameOver(message) {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+          input.addEventListener("input", function () {
+            this.value = this.value.replace(/[^1-9]/g, "");
+            div.classList.remove("correct", "wrong", "hint");
+            messageEl.textContent = "";
+          });
 
-      ctx.fillStyle = "white";
-      ctx.font = "32px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("Oyun Bitti", canvas.width / 2, canvas.height / 2 - 30);
+          input.addEventListener("focus", function () {
+            clearActive();
+            div.classList.add("active");
+          });
 
-      ctx.font = "20px Arial";
-      ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 5);
-      ctx.fillText("Skor: " + score, canvas.width / 2, canvas.height / 2 + 35);
-      ctx.fillText("Yeniden başlatmak için sayfayı yenile.", canvas.width / 2, canvas.height / 2 + 70);
-    }
+          input.addEventListener("blur", function () {
+            div.classList.remove("active");
+          });
 
-    function gameLoop() {
-      if (gameOver) return;
+          input.addEventListener("keydown", function (event) {
+            if (event.key === "ArrowUp") moveFocus(r, c, -1, 0);
+            if (event.key === "ArrowDown") moveFocus(r, c, 1, 0);
+            if (event.key === "ArrowLeft") moveFocus(r, c, 0, -1);
+            if (event.key === "ArrowRight") moveFocus(r, c, 0, 1);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (
+              event.key === "ArrowUp" ||
+              event.key === "ArrowDown" ||
+              event.key === "ArrowLeft" ||
+              event.key === "ArrowRight"
+            ) {
+              event.preventDefault();
+            }
+          });
 
-      movePlayer();
-      moveEnemy();
+          div.appendChild(input);
+          return div;
+        }
 
-      checkStarCollision();
-      checkEnemyCollision();
+        var right = runTotal(r, c, 0, 1);
+        var down = runTotal(r, c, 1, 0);
 
-      drawPlayer();
-      drawStar();
-      drawEnemy();
+        if (right !== "" || down !== "") {
+          div.className += " clue";
 
-      requestAnimationFrame(gameLoop);
-    }
+          var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("viewBox", "0 0 100 100");
+          svg.setAttribute("preserveAspectRatio", "none");
+          svg.setAttribute("class", "diag-line");
 
-    const timer = setInterval(() => {
-      if (gameOver) {
+          var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", "0");
+          line.setAttribute("y1", "0");
+          line.setAttribute("x2", "100");
+          line.setAttribute("y2", "100");
+          line.setAttribute("stroke", "rgba(255,255,255,0.45)");
+          line.setAttribute("stroke-width", "2.5");
+          svg.appendChild(line);
+
+          div.appendChild(svg);
+
+          if (right !== "") {
+            var rightEl = document.createElement("div");
+            rightEl.className = "triangle-label right";
+            rightEl.textContent = right;
+            div.appendChild(rightEl);
+          }
+
+          if (down !== "") {
+            var downEl = document.createElement("div");
+            downEl.className = "triangle-label down";
+            downEl.textContent = down;
+            div.appendChild(downEl);
+          }
+
+          return div;
+        }
+
+        div.className += " spacer";
+        return div;
+      }
+
+      function buildBoard() {
+        board.innerHTML = "";
+        board.style.gridTemplateColumns = "repeat(" + solution[0].length + ", var(--cell-size))";
+
+        for (var r = 0; r < solution.length; r++) {
+          for (var c = 0; c < solution[r].length; c++) {
+            board.appendChild(makeCell(r, c));
+          }
+        }
+      }
+
+      function clearActive() {
+        var cells = document.querySelectorAll(".white");
+        for (var i = 0; i < cells.length; i++) {
+          cells[i].classList.remove("active");
+        }
+      }
+
+      function getInput(r, c) {
+        return document.querySelector('input[data-r="' + r + '"][data-c="' + c + '"]');
+      }
+
+      function getCell(r, c) {
+        return document.querySelector('.white[data-r="' + r + '"][data-c="' + c + '"]');
+      }
+
+      function moveFocus(r, c, dr, dc) {
+        var nr = r + dr;
+        var nc = c + dc;
+
+        while (solution[nr] && solution[nr][nc] !== undefined) {
+          var input = getInput(nr, nc);
+          if (input) {
+            input.focus();
+            return;
+          }
+
+          nr += dr;
+          nc += dc;
+        }
+      }
+
+      function checkGame() {
+        if (finished) return;
+
+        var inputs = document.querySelectorAll("input");
+        var allFilled = true;
+        var allCorrect = true;
+
+        for (var i = 0; i < inputs.length; i++) {
+          var input = inputs[i];
+          var r = Number(input.getAttribute("data-r"));
+          var c = Number(input.getAttribute("data-c"));
+          var cell = getCell(r, c);
+          var answer = solution[r][c];
+
+          cell.classList.remove("correct", "wrong");
+
+          if (input.value === "") {
+            allFilled = false;
+            allCorrect = false;
+            cell.classList.add("wrong");
+          } else if (input.value === answer) {
+            cell.classList.add("correct");
+          } else {
+            allCorrect = false;
+            cell.classList.add("wrong");
+          }
+        }
+
+        if (!allFilled) {
+          messageEl.textContent = "Eksik kutular var.";
+          messageEl.style.color = "#ffd166";
+          return;
+        }
+
+        if (!allCorrect) {
+          mistakes++;
+          mistakesEl.textContent = mistakes;
+          messageEl.textContent = "Bazı sayılar yanlış.";
+          messageEl.style.color = "#ff8a8a";
+          return;
+        }
+
+        finished = true;
         clearInterval(timer);
-        return;
+        messageEl.textContent = "Tebrikler! Bulmacayı çözdün.";
+        messageEl.style.color = "#7CFC90";
       }
 
-      timeLeft--;
-      timeText.textContent = timeLeft;
+      function giveHint() {
+        if (finished || hints <= 0) return;
 
-      if (timeLeft <= 0) {
-        gameOver = true;
+        var empty = [];
+        var inputs = document.querySelectorAll("input");
+
+        for (var i = 0; i < inputs.length; i++) {
+          if (inputs[i].value === "") {
+            empty.push(inputs[i]);
+          }
+        }
+
+        if (empty.length === 0) return;
+
+        var chosen = empty[Math.floor(Math.random() * empty.length)];
+        var r = Number(chosen.getAttribute("data-r"));
+        var c = Number(chosen.getAttribute("data-c"));
+
+        chosen.value = solution[r][c];
+
+        var cell = getCell(r, c);
+        cell.classList.remove("wrong");
+        cell.classList.add("hint");
+
+        hints--;
+        hintsEl.textContent = hints;
+
+        messageEl.textContent = "Bir ipucu verildi.";
+        messageEl.style.color = "#7cc7ff";
+      }
+
+      function showSolution() {
+        var inputs = document.querySelectorAll("input");
+
+        for (var i = 0; i < inputs.length; i++) {
+          var input = inputs[i];
+          var r = Number(input.getAttribute("data-r"));
+          var c = Number(input.getAttribute("data-c"));
+          input.value = solution[r][c];
+
+          var cell = getCell(r, c);
+          cell.classList.remove("wrong");
+          cell.classList.add("correct");
+        }
+
+        finished = true;
         clearInterval(timer);
-        drawGameOver("Süre doldu!");
-      }
-    }, 1000);
 
-    gameLoop();
+        messageEl.textContent = "Çözüm gösterildi.";
+        messageEl.style.color = "#7cc7ff";
+      }
+
+      function startTimer() {
+        clearInterval(timer);
+        seconds = 0;
+        timeEl.textContent = "00:00";
+
+        timer = setInterval(function () {
+          if (finished) return;
+          seconds++;
+          timeEl.textContent = formatTime(seconds);
+        }, 1000);
+      }
+
+      function newGame() {
+        solution = puzzles[levelSelect.value].slice();
+        mistakes = 0;
+        hints = levelSelect.value === "hard" ? 2 : 3;
+        finished = false;
+
+        mistakesEl.textContent = mistakes;
+        hintsEl.textContent = hints;
+        messageEl.textContent = "";
+
+        buildBoard();
+        startTimer();
+
+        var firstInput = document.querySelector("input");
+        if (firstInput) firstInput.focus();
+      }
+
+      newGame();
+    });
   </script>
 </body>
 </html>
