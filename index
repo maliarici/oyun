@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Yıldız Yakalama Oyunu</title>
+  <style>
+    body {
+      margin: 0;
+      background: #222;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      user-select: none;
+    }
+
+    canvas {
+      background: #111;
+      border: 3px solid white;
+      margin-top: 10px;
+      max-width: 95vw;
+    }
+
+    .controls {
+      margin-top: 15px;
+    }
+
+    button {
+      width: 70px;
+      height: 50px;
+      margin: 4px;
+      font-size: 22px;
+      border: none;
+      border-radius: 8px;
+      background: #444;
+      color: white;
+    }
+
+    button:active {
+      background: #777;
+    }
+  </style>
+</head>
+<body>
+  <h1>Yıldız Yakalama Oyunu</h1>
+  <p>Ok tuşlarıyla veya alttaki butonlarla hareket et.</p>
+
+  <h2>
+    Skor: <span id="score">0</span> |
+    Süre: <span id="time">60</span>
+  </h2>
+
+  <canvas id="game" width="500" height="400"></canvas>
+
+  <div class="controls">
+    <div>
+      <button id="up">⬆️</button>
+    </div>
+    <div>
+      <button id="left">⬅️</button>
+      <button id="down">⬇️</button>
+      <button id="right">➡️</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const scoreText = document.getElementById("score");
+    const timeText = document.getElementById("time");
+
+    const player = {
+      x: 50,
+      y: 50,
+      size: 30,
+      speed: 5
+    };
+
+    const star = {
+      x: 200,
+      y: 150,
+      size: 20
+    };
+
+    const enemy = {
+      x: 350,
+      y: 250,
+      size: 35,
+      speedX: 3,
+      speedY: 2
+    };
+
+    let score = 0;
+    let timeLeft = 60;
+    let gameOver = false;
+
+    const keys = {};
+
+    document.addEventListener("keydown", e => {
+      keys[e.key] = true;
+    });
+
+    document.addEventListener("keyup", e => {
+      keys[e.key] = false;
+    });
+
+    function addTouchControl(buttonId, keyName) {
+      const button = document.getElementById(buttonId);
+
+      button.addEventListener("touchstart", e => {
+        e.preventDefault();
+        keys[keyName] = true;
+      });
+
+      button.addEventListener("touchend", e => {
+        e.preventDefault();
+        keys[keyName] = false;
+      });
+
+      button.addEventListener("mousedown", () => {
+        keys[keyName] = true;
+      });
+
+      button.addEventListener("mouseup", () => {
+        keys[keyName] = false;
+      });
+
+      button.addEventListener("mouseleave", () => {
+        keys[keyName] = false;
+      });
+    }
+
+    addTouchControl("up", "ArrowUp");
+    addTouchControl("down", "ArrowDown");
+    addTouchControl("left", "ArrowLeft");
+    addTouchControl("right", "ArrowRight");
+
+    function movePlayer() {
+      if (keys["ArrowUp"]) player.y -= player.speed;
+      if (keys["ArrowDown"]) player.y += player.speed;
+      if (keys["ArrowLeft"]) player.x -= player.speed;
+      if (keys["ArrowRight"]) player.x += player.speed;
+
+      player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
+      player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
+    }
+
+    function moveEnemy() {
+      enemy.x += enemy.speedX;
+      enemy.y += enemy.speedY;
+
+      if (enemy.x <= 0 || enemy.x + enemy.size >= canvas.width) {
+        enemy.speedX *= -1;
+      }
+
+      if (enemy.y <= 0 || enemy.y + enemy.size >= canvas.height) {
+        enemy.speedY *= -1;
+      }
+    }
+
+    function isColliding(a, b) {
+      return (
+        a.x < b.x + b.size &&
+        a.x + a.size > b.x &&
+        a.y < b.y + b.size &&
+        a.y + a.size > b.y
+      );
+    }
+
+    function checkStarCollision() {
+      if (isColliding(player, star)) {
+        score++;
+        scoreText.textContent = score;
+
+        star.x = Math.random() * (canvas.width - star.size);
+        star.y = Math.random() * (canvas.height - star.size);
+      }
+    }
+
+    function checkEnemyCollision() {
+      if (isColliding(player, enemy)) {
+        gameOver = true;
+        drawGameOver("Düşmana yakalandın!");
+      }
+    }
+
+    function drawPlayer() {
+      ctx.fillStyle = "dodgerblue";
+      ctx.fillRect(player.x, player.y, player.size, player.size);
+    }
+
+    function drawStar() {
+      ctx.fillStyle = "gold";
+      ctx.beginPath();
+      ctx.arc(
+        star.x + star.size / 2,
+        star.y + star.size / 2,
+        star.size / 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    function drawEnemy() {
+      ctx.fillStyle = "crimson";
+      ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+    }
+
+    function drawGameOver(message) {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "white";
+      ctx.font = "32px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Oyun Bitti", canvas.width / 2, canvas.height / 2 - 30);
+
+      ctx.font = "20px Arial";
+      ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 5);
+      ctx.fillText("Skor: " + score, canvas.width / 2, canvas.height / 2 + 35);
+      ctx.fillText("Yeniden başlatmak için sayfayı yenile.", canvas.width / 2, canvas.height / 2 + 70);
+    }
+
+    function gameLoop() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      movePlayer();
+      moveEnemy();
+
+      checkStarCollision();
+      checkEnemyCollision();
+
+      drawPlayer();
+      drawStar();
+      drawEnemy();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    const timer = setInterval(() => {
+      if (gameOver) {
+        clearInterval(timer);
+        return;
+      }
+
+      timeLeft--;
+      timeText.textContent = timeLeft;
+
+      if (timeLeft <= 0) {
+        gameOver = true;
+        clearInterval(timer);
+        drawGameOver("Süre doldu!");
+      }
+    }, 1000);
+
+    gameLoop();
+  </script>
+</body>
+</html>
